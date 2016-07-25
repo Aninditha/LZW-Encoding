@@ -1,0 +1,218 @@
+This is a very very large life,
+containing many characters a-z and A-Z.
+This file also contains digits here and there.
+This file includes many symbols also.
+This is A SAMPLE FILE USED FOR TESTING Lemple-Ziv-Welch encoding and decoding algorithm
+Lemple-Ziv-Welch is a compression algorithm.
+This is a lossless algorithm (GIF and TIFF uses this algorithm).
+
+Sample text:
+My name is Aninditha Madishetty
+I'm a student in university of north Carolina Charlotte,
+doing my mater's in computer science at this place.
+I joined university of north Carolina at Charlotte in Spring-2016.
+my ID#: 800936606
+my email ID: amadishe@uncc.edu
+
+This is my first programming assignment in
+ITCS 6114/8114: Algorithms and Data Structures
+
+
+Encryption program is given below:
+
+
+package project;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Arrays;
+
+public class LZWEncoding {
+	@SuppressWarnings("resource")
+	public static void main(String args[]) throws IOException{
+		
+		//Initializing variables
+		String inputFile = args[0];
+		double bitLength = Integer.parseInt(args[1]);
+		double maxTableSize = Math.pow(2.0,bitLength);
+		String[] table = new String[(int) maxTableSize];
+		String currentString = "";
+		int index, symbol;
+		String outputFile;
+		//creating output file in the required format
+		int dotIndex = inputFile.lastIndexOf('.');
+		outputFile = inputFile.substring(0, dotIndex)+".lzw";
+		//Creating a file writer object to write data into the output file
+		FileWriter writeData = new FileWriter(outputFile);
+		
+		//Assigning first 256 ASCII characters
+		for(index=0;index<=255;index++)
+			table[index] = "" + (char)index;
+		index = 256;
+		
+		try {
+			//creating a file object to read input data from a given file
+			FileInputStream readInput = new FileInputStream(inputFile);
+			//reading data from file
+			symbol = readInput.read();
+			
+			//while there is still data to read
+		    while(symbol != -1){
+		    	
+		    	if(Arrays.asList(table).contains((currentString)+(char)symbol))
+		    		currentString = currentString + (char)symbol;
+		    	else{
+		    		//writing the resulting integer (binary string) to the file
+		    		writeData.write(output(Arrays.asList(table).indexOf(currentString))+"\n");
+					writeData.flush();
+		    		if(index < maxTableSize){
+		    			//Insert data into the table
+		    			table[index] = currentString+(char)symbol;
+		    			index++;
+		    		}
+		    		currentString = ""+(char) symbol;
+		      }
+		      symbol = readInput.read();
+		    }
+		    //writing the last integer (binary string) to the file
+		    writeData.write(output(Arrays.asList(table).indexOf(currentString)));
+			writeData.flush();
+			
+		} catch (FileNotFoundException e) {
+			//If the given file does not exists
+			System.out.println("File Not Found\nTry Again..!!");
+			System.exit(0);
+		}
+	}
+
+	private static String output(int indexOf) {
+		
+		//converting the given integer to a 16-bit binary string
+		String binaryValue = "", zeros = "";
+		binaryValue = Integer.toBinaryString(indexOf);
+		int length;
+		
+		length = 16 - binaryValue.length();
+		while(length != 0){
+			zeros = zeros + "0";
+			length -= 1;
+		}
+		binaryValue = zeros + binaryValue;
+		return binaryValue;
+	}
+}
+
+
+
+Decoding program is given below:
+
+package project;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class LZWDecoding {
+	@SuppressWarnings("resource")
+	public static void main(String args[]) throws IOException{
+		
+		//Initializing variables
+		String inputFile = args[0], outputFile;
+		double bitLength = Integer.parseInt(args[1]);
+		double maxTableSize = Math.pow(2.0,bitLength);
+		String[] table = new String[(int) maxTableSize];
+		String currentString = "", newString = "", line;
+		int index, code;
+		//creating output file in the required format
+		int dotIndex = inputFile.lastIndexOf('.');
+		outputFile = inputFile.substring(0, dotIndex)+"_decoded.txt";
+		//Creating a file writer object to write data into the output file
+		FileWriter writeData = new FileWriter(outputFile);
+		
+		//Assigning first 256 ASCII characters
+		for(index=0;index<=255;index++)
+			table[index] = "" + (char)index;
+		index = 256;
+		
+		try {
+			//creating a file object to read input data from a given file
+			BufferedReader readInput = new BufferedReader(new FileReader(inputFile));
+			
+			//reading data from file
+			line = readInput.readLine();
+			code = toInteger(line);
+			currentString = table[code];
+			//writing the resulting code to the file
+			writeData.write(currentString);
+			writeData.flush();
+			
+			//while there is still data to read
+		    while(line !=null) {
+		    	
+		    	line = readInput.readLine();
+		    	if(line == null)
+		    		System.exit(0);
+				code = toInteger(line);
+		    	if(code >= index)
+		    		newString = currentString + currentString.charAt(0);
+		    	else
+		    		newString = table[code];
+		    	
+		    	//writing the resulting code to the file
+		    	writeData.write(newString);
+		    	writeData.flush();
+		    	
+		    	//Insert data into the table
+		    	if(index<maxTableSize){
+		    		table[index] = currentString + newString.charAt(0);
+		    		index += 1;
+		    	}
+		    	currentString = newString;
+		    }
+		} catch (FileNotFoundException e) {
+			//If the given file does not exists
+			System.out.println("File Not Found\nTry Again..!!");
+			System.exit(0);
+		}
+	}
+
+	private static int toInteger(String readLine) {
+		//converting the given 16-bit binary string to an integer
+		int integer=0, value, power=15;
+		for(char c : readLine.toCharArray()){
+			value = Integer.parseInt(""+c);
+			integer += value * Math.pow(2.0,power);
+			power -= 1;
+		}
+		return integer;
+	}
+}
+
+basic math operations:
+a + b = b + a
+a * b = ab
+a - b = - (b - a)
+
+
+$ % ^ & ( ) _ - + = ! ~ @ # { } [ ] \ | `
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
